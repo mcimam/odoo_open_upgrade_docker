@@ -4,7 +4,7 @@
 
 # CONSTANT
 VERSION0=12
-VERSION1=16
+VERSION1=17
 
 CMD_DOCKER="docker compose"
 
