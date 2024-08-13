@@ -1,0 +1,65 @@
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Ignore Node.js dependencies
+node_modules/
+
+# Ignore Ruby dependencies
+vendor/bundle/
+
+# Ignore Composer dependencies
+vendor/
+
+# Ignore local .env files
+.env
+.env.*
+
+# Ignore Docker files that might be locally generated
+docker-compose.override.yml
+docker-compose.override.yaml
+docker-compose.local.yml
+docker-compose.local.yaml
+.docker/
+
+# Ignore Docker build artifacts
+*.log
+*.tmp
+*.pid
+tmp/
+*.bak
+*.swp
+*.swo
+*.swn
+**/*.swp
+**/*.swo
+**/*.bak
+**/*~
+
+# Ignore Docker images
+**/docker-image.tar
+
+# Ignore Docker containers' volumes
+volumes/
+
+# Ignore SQL dump files
+*.sql
+*.sql.gz
+*.sqlite
+*.db
+
+# Ignore editor-specific files
+.idea/
+.vscode/
+*.code-workspace
+*.sublime-workspace
+*.sublime-project
+
+# Ignore OS-specific files
+.DS_Store
+Thumbs.db
+
+# Ignore sql
+.sql
