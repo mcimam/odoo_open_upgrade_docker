@@ -64,15 +64,6 @@ services:
       - USER=odoo
       - PASSWORD=odoo
 
-  odoo17:
-    build: 17.0/.
-    # command: tail -F /dev/null
-    environment:
-      - OPENUPGRADE_TARGET_VERSION=17.0
-      - DATABASE=odoo
-      - HOST=db
-      - USER=odoo
-      - PASSWORD=odoo
 
 volumes:
   pg_data:
