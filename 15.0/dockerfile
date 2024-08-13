@@ -9,7 +9,7 @@ RUN apt-get update -y && \
 
 # INSTALL Openupgrade
 # RUN pip3 install openupgradelib
-RUN pip install lxml[html_clean] lxml==5.1.0
+RUN pip3 install lxml[html_clean] lxml==5.1.0
 RUN pip3 install --ignore-installed git+https://github.com/OCA/openupgradelib.git@master
 
 # CLONE Openupgrade
