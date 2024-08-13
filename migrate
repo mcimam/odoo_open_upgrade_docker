@@ -1,0 +1,134 @@
+#!/bin/bash
+
+# set -x 
+
+# CONSTANT
+VERSION0=12
+VERSION1=16
+
+CMD_DOCKER="docker compose"
+
+DB_NAME="odoo"
+
+# ODOO / DOCKER
+init_container (){
+    ${CMD_DOCKER}  down -v
+    ${CMD_DOCKER} up --build --no-start -V
+}
+
+build_image (){
+    for version in $(seq ${VERSION0} ${VERSION1}); do
+        docker build -t dooupgrade:${version}.0 ${version}.0/.
+    done
+}
+
+migrate_image (){
+    if [ -z $1] || [-z $2]
+    then
+        echo "Specify src and target version."
+        echo "ex : migrate 12.0 16.0 "
+    else
+        version_src=${1%.*}
+        version_str=$(( ${1%.*} + 1 )) #start migration from next ver
+        version_dst=${2%.*}
+
+        for version in $(seq ${version_str} ${version_dst}); do
+            echo "Migrating to ${version}"
+            docker compose up odoo${version}
+            echo "Successfully migrating to ${version}"
+        done
+
+    fi
+
+}
+
+# DATABASE
+load_db(){
+    ${CMD_DOCKER} up db -d --wait -V
+    ${CMD_DOCKER} exec -T db psql -U odoo -d postgres -c "DROP DATABASE IF EXISTS ${DB_NAME};"
+    ${CMD_DOCKER} exec -T db psql -U odoo -d postgres -c "CREATE DATABASE ${DB_NAME};"
+    ${CMD_DOCKER} exec -T db psql -U odoo -d ${DB_NAME}  < $1
+}
+
+dump_db(){
+    ${CMD_DOCKER} exec -T db pg_dump -U odoo -d ${DB_NAME} --no-acl --no-owner > $1
+}
+
+run_db(){
+    ${CMD_DOCKER} exec -T db psql -U odoo -d ${DB_NAME} -c $1
+}
+
+shell_db(){
+    ${CMD_DOCKER} exec db psql -U odoo -d ${DB_NAME}
+}
+
+# MISC
+help(){
+    echo "ODOO OPEN UPGRADE MIG TOOLS"
+    echo "---------------------------"
+    echo "Docker:
+    - init                  : Init docker
+    - build                 : Build image
+    - migrate [from] [to]   : Run migration
+    - destroy               : Destoy docker container
+
+    Database:
+    - load [dump.sql]       : Reload database
+    - dump [dump.sql]       : Dump database
+    - run ['query']         : Run sql query
+    - dbshell               : Open psql"
+}
+
+destroy(){
+    ${CMD_DOCKER} down -V
+}
+
+#####
+if [[ -z $1 ]];
+then
+    help
+else
+    case $1 in
+        init)
+            init_container
+        ;;
+        build)
+            build_image
+        ;; 
+        migrate)
+            migrate_image $2 $3
+        ;;
+        load) 
+            load_db $2
+        ;;
+        dump) 
+            dump_db $2
+        ;;
+        run)
+            run_db $2
+        ;;
+        dbshell)
+            shell_db
+        ;;
+        destroy)
+            destroy
+        ;;
+        *)
+            help
+        ;;
+    esac
+fi
+
+
+
+
+
+#####
+# docker compose down -v
+# docker compose up --build --no-start -V
+# docker compose up db -d --wait
+# docker compose exec -T db psql -U odoo -d odoo < ./dump.sql
+
+# for version in {12..16}; do
+#     docker compose up odoo${version}
+# done
