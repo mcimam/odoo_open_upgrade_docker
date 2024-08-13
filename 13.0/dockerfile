@@ -1,0 +1,91 @@
+FROM ubuntu:18.04
+
+USER root
+
+SHELL ["/bin/bash", "-xo", "pipefail", "-c"]
+
+# Generate locale C.UTF-8 for postgres and general locale data
+ENV LANG C.UTF-8
+
+# install depedencies
+RUN apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive \
+    apt install -y --no-install-recommends \
+    build-essential \
+    ca-certificates \
+    curl \
+    dirmngr \
+    fonts-noto-cjk \
+    gnupg \
+    libssl1.0-dev \
+    node-less \
+    libxml2-dev \
+    libxslt-dev \
+    libevent-dev \
+    libsasl2-dev \
+    libldap2-dev \
+    python3-dev \
+    python3-pip \
+    python3-phonenumbers \
+    python3-pyldap \
+    python3-qrcode \
+    python3-renderpm \
+    python3-setuptools \
+    python3-slugify \
+    python3-vobject \
+    python3-watchdog \
+    python3-xlrd \
+    git \
+    xz-utils
+
+RUN curl -o wkhtmltox.deb -sSL https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.bionic_amd64.deb && \
+    echo 'f1689a1b302ff102160f2693129f789410a1708a wkhtmltox.deb' | sha1sum -c - && \
+    apt-get install -y --no-install-recommends ./wkhtmltox.deb && rm -rf /var/lib/apt/lists/* wkhtmltox.deb
+
+
+# install postgres client
+RUN install -d /usr/share/postgresql-common/pgdg && \
+curl -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc --fail https://www.postgresql.org/media/keys/ACCC4CF8.asc && \
+sh -c 'echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt-archieve.postgresql.org/pub/repos/apt bionic-pgdg main" > /etc/apt/sources.list.d/pgdg.list' && \
+apt update && \
+apt install -y --no-install-recommends postgresql-client
+
+# Create extra addons folder
+RUN mkdir -p /mnt/extra-addons \
+    && mkdir -p /OpenUpgrade
+
+VOLUME ["/var/lib/odoo", "/mnt/extra-addons"]
+
+ENV ODOO_RC /etc/odoo/odoo.conf
+
+
+# Clone openupgrade odoo version
+ENV ODOO_VERSION=13.0
+ENV OPENUPGRADE_TARGET_VERSION=13.0
+
+RUN git clone -b ${ODOO_VERSION} --depth 1 --single-branch https://github.com/OCA/OpenUpgrade.git /OpenUpgrade
+
+# install python requirement
+RUN pip3 install wheel
+RUN pip3 install -r /OpenUpgrade/requirements.txt
+# RUN pip3 install openupgradelib
+RUN pip3 install lxml==5.1.0
+RUN pip3 install --ignore-installed git+https://github.com/OCA/openupgradelib.git@master
+
+# Copy entrypoint script and Odoo configuration file
+COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
+RUN chmod +x /usr/local/bin/wait-for-psql.py
+
+COPY ./entrypoint.sh /
+RUN chmod +x entrypoint.sh
+
+COPY ./odoo.conf /etc/odoo/
+
+
+# RUN Open upgrade
+ENTRYPOINT ["/entrypoint.sh"]
+# CMD ["odoo"]
+CMD ["odoo", \
+    "--update=all", \
+    "--no-http", \
+    "--stop-after-init"]    

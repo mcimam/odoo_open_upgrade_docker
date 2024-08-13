@@ -1,0 +1,28 @@
+FROM odoo:14.0
+
+USER root
+
+# INSTALL Deps
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+    git
+
+# INSTALL Openupgrade
+RUN pip3 install openupgradelib
+
+# CLONE Openupgrade
+ENV ODOO_VERSION=14.0
+ENV OPENUPGRADE_TARGET_VERSION=14.0
+
+RUN git clone -b ${ODOO_VERSION} --depth 1 --single-branch https://github.com/OCA/OpenUpgrade.git /OpenUpgrade
+
+
+# RUN Open upgrade
+CMD ["odoo", \
+    "--database=${DATABASE}", \
+    "--addons-path=/OpenUpgrade", \
+    "--upgrade-path=/OpenUpgrade/openupgrade_scripts/scripts", \
+    "--update=all", \
+    "--no-http", \
+    "--load=base,web,openupgrade_framework", \
+    "--stop-after-init"]    

@@ -1,0 +1,29 @@
+FROM odoo:16.0
+
+USER root
+
+# INSTALL Deps
+RUN apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+    git
+
+# INSTALL Openupgrade
+# RUN pip3 install openupgradelib
+RUN pip install lxml[html_clean] lxml==5.1.0
+RUN pip3 install --ignore-installed git+https://github.com/OCA/openupgradelib.git@master
+
+# CLONE Openupgrade
+ENV ODOO_VERSION=16.0
+ENV OPENUPGRADE_TARGET_VERSION=16.0
+
+RUN git clone -b ${ODOO_VERSION} --depth 1 --single-branch https://github.com/OCA/OpenUpgrade.git /OpenUpgrade
+
+# RUN Open upgrade
+CMD ["odoo", \
+    "--database=${DATABASE}", \
+    "--addons-path=/OpenUpgrade", \
+    "--upgrade-path=/OpenUpgrade/openupgrade_scripts/scripts", \
+    "--update=all", \
+    "--no-http", \
+    "--load=base,web,openupgrade_framework", \
+    "--stop-after-init"]    

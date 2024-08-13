@@ -1,0 +1,21 @@
+services:
+  odoo:
+    build: .
+    # command: tail -F /dev/null
+    environment:
+      - HOST=db
+      - USER=odoo
+      - PASSWORD=odoo
+    extra_hosts:
+    - "host.docker.internal:host-gateway"
+  db:
+    image: postgres:13
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
+volumes:
+  pg_data:
