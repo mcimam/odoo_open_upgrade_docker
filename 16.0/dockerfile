@@ -18,6 +18,14 @@ ENV OPENUPGRADE_TARGET_VERSION=16.0
 
 RUN git clone -b ${ODOO_VERSION} --depth 1 --single-branch https://github.com/OCA/OpenUpgrade.git /OpenUpgrade
 
+# Copy entypoint
+COPY wait-for-psql.py /usr/local/bin/wait-for-psql.py
+RUN chmod +x /usr/local/bin/wait-for-psql.py
+
+COPY entrypoint.sh /
+RUN chmod +x entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
 # RUN Open upgrade
 CMD ["odoo", \
     "--database=${DATABASE}", \
