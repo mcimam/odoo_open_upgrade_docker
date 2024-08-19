@@ -114,6 +114,9 @@ else
         migrate)
             migrate_image $2 $3
         ;;
+        run)
+            run_single $2
+        ;;
         recreate)
             recreate_db $2
         ;;
