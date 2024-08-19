@@ -34,7 +34,7 @@ migrate_image (){
 
         for version in $(seq ${version_str} ${version_dst}); do
             echo "Migrating to ${version}"
-            docker compose up odoo${version}
+            ${CMD_DOCKER} up odoo${version}
             echo "Successfully migrating to ${version}"
         done
 
@@ -42,11 +42,25 @@ migrate_image (){
 
 }
 
+run_single (){
+    if [ -z $1]
+    then
+        echo "Sepecify version."
+    else
+        version=${1%.*}
+        echo "Migrating to ${version}"
+        ${CMD_DOCKER} up odoo${version}
+        echo "Successfully migrating to ${version}"
+    fi
+}
+
 # DATABASE
-load_db(){
-    ${CMD_DOCKER} up db -d --wait -V
+recreate_db(){
     ${CMD_DOCKER} exec -T db psql -U odoo -d postgres -c "DROP DATABASE IF EXISTS ${DB_NAME};"
     ${CMD_DOCKER} exec -T db psql -U odoo -d postgres -c "CREATE DATABASE ${DB_NAME};"
+}
+
+load_db(){
     ${CMD_DOCKER} exec -T db psql -U odoo -d ${DB_NAME}  < $1
 }
 
@@ -69,11 +83,13 @@ help(){
     echo "Docker:
     - init                  : Init docker
     - build                 : Build image
+    - run [version]         : Run single migration at specific version
     - migrate [from] [to]   : Run migration
     - destroy               : Destoy docker container
 
     Database:
-    - load [dump.sql]       : Reload database
+    - recreate              : Recreate database
+    - load [dump.sql]       : Load sql
     - dump [dump.sql]       : Dump database
     - run ['query']         : Run sql query
     - dbshell               : Open psql"
@@ -97,6 +113,9 @@ else
         ;; 
         migrate)
             migrate_image $2 $3
+        ;;
+        recreate)
+            recreate_db $2
         ;;
         load) 
             load_db $2
