@@ -56,11 +56,13 @@ run_single (){
 
 # DATABASE
 recreate_db(){
+    ${CMD_DOCKER} up db -d --wait
     ${CMD_DOCKER} exec -T db psql -U odoo -d postgres -c "DROP DATABASE IF EXISTS ${DB_NAME};"
     ${CMD_DOCKER} exec -T db psql -U odoo -d postgres -c "CREATE DATABASE ${DB_NAME};"
 }
 
 load_db(){
+    ${CMD_DOCKER} up db -d --wait
     ${CMD_DOCKER} exec -T db psql -U odoo -d ${DB_NAME}  < $1
 }
 
