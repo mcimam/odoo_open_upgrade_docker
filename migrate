@@ -23,7 +23,7 @@ build_image (){
 }
 
 migrate_image (){
-    if [ -z $1] || [-z $2]
+    if [ -z $1 ] || [ -z $2 ]
     then
         echo "Specify src and target version."
         echo "ex : migrate 12.0 16.0 "
@@ -43,7 +43,7 @@ migrate_image (){
 }
 
 run_single (){
-    if [ -z $1]
+    if [ -z $1 ]
     then
         echo "Sepecify version."
     else
